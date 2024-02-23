@@ -1,8 +1,7 @@
-<p align="center">
-<img height="200" src="./assets/kv.png" alt="to unocss">
-</p>
-<p align="center"> English | <a href="./README_zh.md">简体中文</a></p>
+Quickly generate eslint-disable through shortcut keys, see the position of your cursor, whether there is a selected area block, generate the corresponding eslint-disable, and provide some code tips for rules.
 
+## Keybingdings
+- 通过`mac` ?`cmd+shift+e` : `ctrl+shift+e`
 
 ## :coffee:
 

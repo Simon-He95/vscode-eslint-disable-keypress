@@ -1,7 +1,7 @@
-<p align="center">
-<img height="200" src="./assets/kv.png" alt="to unocss">
-</p>
-<p align="center"> <a href="./README.md">English</a> | 简体中文</p>
+通过快捷键快速生成eslint-disable,更具你光标的位置，是否有选中区域块，生成对应的eslint-disable，并提供了一些rules的代码提示
+
+## Keybingdings
+- 通过`mac` ? `cmd+shift+e` : `ctrl+shift+e`
 
 ## :coffee:
 
