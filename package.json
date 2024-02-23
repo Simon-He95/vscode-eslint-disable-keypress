@@ -45,6 +45,11 @@
         "command": "vscode-eslint-disable-keypress.on",
         "key": "cmd+shift+e",
         "when": "isMac"
+      },
+      {
+        "command": "vscode-eslint-disable-keypress.on",
+        "key": "ctrl+shift+e",
+        "when": "isWin"
       }
     ]
   },
