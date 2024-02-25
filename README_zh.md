@@ -1,5 +1,7 @@
 通过快捷键快速生成eslint-disable,更具你光标的位置，是否有选中区域块，生成对应的eslint-disable，并提供了一些rules的代码提示
 
+![demo](/assets/demo.gif)
+
 ## Keybingdings
 - 通过`mac` ? `cmd+shift+e` : `ctrl+shift+e`
 

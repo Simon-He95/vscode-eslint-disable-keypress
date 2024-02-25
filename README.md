@@ -1,5 +1,7 @@
 Quickly generate eslint-disable through shortcut keys, see the position of your cursor, whether there is a selected area block, generate the corresponding eslint-disable, and provide some code tips for rules.
 
+![demo](/assets/demo.gif)
+
 ## Keybingdings
 - 通过`mac` ?`cmd+shift+e` : `ctrl+shift+e`
 
