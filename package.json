@@ -2,7 +2,7 @@
   "publisher": "simonhe",
   "name": "vscode-eslint-disable-keypress",
   "displayName": "vscode-eslint-disable-keypress",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packageManager": "pnpm@8.10.5",
   "description": "vscode-eslint-disable-keypress",
   "author": "Simon He <https://github.com/Simon-He95>",
