@@ -1,10 +1,9 @@
-import { createCompletionItem, createPosition, createProgress, getCurrentFileUrl, getLineText, getOffsetFromPosition, getPosition, getRootPath, getSelection, jumpToLine, message, nextTick, registerCommand, registerCompletionItemProvider, saveFile, updateText } from '@vscode-use/utils'
-import type { Disposable, ExtensionContext } from 'vscode'
+import { createCompletionItem, createExtension, createPosition, createProgress, getCurrentFileUrl, getLineText, getOffsetFromPosition, getPosition, getRootPath, getSelection, jumpToLine, message, nextTick, registerCommand, registerCompletionItemProvider, saveFile, updateText } from '@vscode-use/utils'
 import { jsShell } from 'lazy-js-utils'
 import { options } from './constants'
 
-export async function activate(context: ExtensionContext) {
-  const disposes: Disposable[] = []
+// eslint-disable-next-line no-restricted-syntax
+export = createExtension(() => {
   let resolver: any
   let isPending = true
   let timer: any
@@ -22,119 +21,56 @@ export async function activate(context: ExtensionContext) {
     return false
   }
   let isWorking = false
-  disposes.push(registerCommand('vscode-eslint-disable-keypress.on', async () => {
-    if (isWorking)
-      return
 
-    const selection = getSelection()
-    if (!selection)
-      return
+  return [
+    registerCommand('vscode-eslint-disable-keypress.on', async () => {
+      if (isWorking)
+        return
 
-    let insertText = ''
-    const errors: any[] = []
-    isWorking = true
+      const selection = getSelection()
+      if (!selection)
+        return
 
-    saveFile()
-    nextTick(() => {
-      const { result } = jsShell(`npx eslint ${getCurrentFileUrl()}`, {
-        cwd: getRootPath(),
-        isLog: true,
-        stdio: 'pipe',
-      })
+      let insertText = ''
+      const errors: any[] = []
+      isWorking = true
 
-      if (result) {
-        const data = result.split('\n').map(i => i.trim().replace(/\s+/g, ' ')).slice(1)
-        for (const error of data) {
-          if (!error)
-            break
-          const [pos, _, ...rest] = error.split(' ')
-          const msg = rest.slice(0, -1).join(' ')
-          const rule = rest.slice(-1)[0]
-          const [line, character] = pos.split(':').map(i => +i)
-          errors.push({
-            line,
-            character,
-            msg,
-            rule,
-          })
-        }
-      }
-      if (selection.selectedTextArray.length > 1) {
-        // /* eslint-disable */  /* eslint-enable */
-        // todo: 多个选择快触发
-      }
-      else if (isBlock(selection.selectedTextArray[0])) {
-        const offset = getOffsetFromPosition(createPosition(selection.line, selection.character))!
-        const newEndPosition = getPosition(offset + selection.selectedTextArray[0].length)
-        const startPosition = createPosition(selection.line, 0)
-        if (!errors.length)
-          return message.warn('当前行没有eslint错误')
-
-        isPending = true
-        createProgress({
-          title: 'Progress Bar: vscode-eslint-disable-keypress',
-          async done(report) {
-            let count = 10
-            report({
-              message: 'Progress bar 10% completed',
-              increment: count,
-            })
-            await p(() => {
-              timer = setInterval(() => {
-                if (isPending) {
-                  if (count <= 90) {
-                    count += 10
-                    report({
-                      message: `Progress bar ${count}% completed`,
-                      increment: count,
-                    })
-                  }
-                }
-              }, 200)
-            })
-            report({
-              message: 'Progress bar 100% completed',
-              increment: 100,
-            })
-          },
+      saveFile()
+      nextTick(() => {
+        const { result } = jsShell(`npx eslint ${getCurrentFileUrl()}`, {
+          cwd: getRootPath(),
+          isLog: true,
+          stdio: 'pipe',
         })
-        const temp = []
-        for (const item of errors) {
-          const { line, rule } = item
-          if (line >= startPosition.line + 1 && line <= newEndPosition.line + 1)
-            temp.push(rule)
-          else if (line > newEndPosition.line + 1)
-            break
-        }
-        insertText = `/* eslint-disable ${temp.join(',')} */\n`
 
-        updateText((edit) => {
-          edit.insert(startPosition, insertText)
-          edit.insert(createPosition(newEndPosition.line + 1, 0), '/* eslint-enable */\n')
-          setTimeout(() => {
-            isPending = false
-            resolver()
-            clearInterval(timer)
-          }, 500)
-        })
-        nextTick(() => {
-          jumpToLine([selection.line, insertText.length - 4])
-        })
-      }
-      else {
-        if (selection.line === 0 && !errors.length) {
-          // /* eslint-disable */ 将整个文件禁用eslint
-          insertText = '// eslint-disable\n'
-          updateText((edit) => {
-            edit.insert(createPosition(0, 0), insertText)
-          })
-        }
-        else {
-          // 下一行eslint eslint-disable-next-line
-          if (!errors.length) {
-            message.warn('当前行没有eslint错误')
-            return
+        if (result) {
+          const data = result.split('\n').map(i => i.trim().replace(/\s+/g, ' ')).slice(1)
+          for (const error of data) {
+            if (!error)
+              break
+            const [pos, _, ...rest] = error.split(' ')
+            const msg = rest.slice(0, -1).join(' ')
+            const rule = rest.slice(-1)[0]
+            const [line, character] = pos.split(':').map(i => +i)
+            errors.push({
+              line,
+              character,
+              msg,
+              rule,
+            })
           }
+        }
+        if (selection.selectedTextArray.length > 1) {
+          // /* eslint-disable */  /* eslint-enable */
+          // todo: 多个选择快触发
+        }
+        else if (isBlock(selection.selectedTextArray[0])) {
+          const offset = getOffsetFromPosition(createPosition(selection.line, selection.character))!
+          const newEndPosition = getPosition(offset + selection.selectedTextArray[0].length)
+          const startPosition = createPosition(selection.line, 0)
+          if (!errors.length)
+            return message.warn('当前行没有eslint错误')
+
           isPending = true
           createProgress({
             title: 'Progress Bar: vscode-eslint-disable-keypress',
@@ -163,19 +99,19 @@ export async function activate(context: ExtensionContext) {
               })
             },
           })
-
           const temp = []
           for (const item of errors) {
             const { line, rule } = item
-            if (line === selection.line + 1)
+            if (line >= startPosition.line + 1 && line <= newEndPosition.line + 1)
               temp.push(rule)
-            else if (line > selection.line + 1)
+            else if (line > newEndPosition.line + 1)
               break
           }
-          insertText = `// eslint-disable-next-line ${temp.join(',')}\n`
+          insertText = `/* eslint-disable ${temp.join(',')} */\n`
 
           updateText((edit) => {
-            edit.insert(createPosition(selection.line, 0), insertText)
+            edit.insert(startPosition, insertText)
+            edit.insert(createPosition(newEndPosition.line + 1, 0), '/* eslint-enable */\n')
             setTimeout(() => {
               isPending = false
               resolver()
@@ -183,32 +119,96 @@ export async function activate(context: ExtensionContext) {
             }, 500)
           })
           nextTick(() => {
-            jumpToLine([selection.line, insertText.length])
+            jumpToLine([selection.line, insertText.length - 4])
           })
         }
-      }
-      isWorking = false
-    })
-  }))
+        else {
+          if (selection.line === 0 && !errors.length) {
+            // /* eslint-disable */ 将整个文件禁用eslint
+            insertText = '// eslint-disable\n'
+            updateText((edit) => {
+              edit.insert(createPosition(0, 0), insertText)
+            })
+          }
+          else {
+            // 下一行eslint eslint-disable-next-line
+            if (!errors.length) {
+              message.warn('当前行没有eslint错误')
+              return
+            }
+            isPending = true
+            createProgress({
+              title: 'Progress Bar: vscode-eslint-disable-keypress',
+              async done(report) {
+                let count = 10
+                report({
+                  message: 'Progress bar 10% completed',
+                  increment: count,
+                })
+                await p(() => {
+                  timer = setInterval(() => {
+                    if (isPending) {
+                      if (count <= 90) {
+                        count += 10
+                        report({
+                          message: `Progress bar ${count}% completed`,
+                          increment: count,
+                        })
+                      }
+                    }
+                  }, 200)
+                })
+                report({
+                  message: 'Progress bar 100% completed',
+                  increment: 100,
+                })
+              },
+            })
 
-  disposes.push(registerCompletionItemProvider('*', () => {
-    const selection = getSelection()
-    if (!selection)
-      return
-    const lineText = getLineText(selection.line)
-    if (!lineText)
-      return
-    if (!lineText.startsWith('//') && !lineText.startsWith('/*'))
-      return
+            const temp = []
+            for (const item of errors) {
+              const { line, rule } = item
+              if (line === selection.line + 1)
+                temp.push(rule)
+              else if (line > selection.line + 1)
+                break
+            }
+            insertText = `// eslint-disable-next-line ${temp.join(',')}\n`
 
-    return options.map(content => createCompletionItem({
-      content,
-    }))
-  }, [' ']))
+            updateText((edit) => {
+              // 获取下一行的前面空格作为当前的 offset
+              const nextLineText = getLineText(selection.line + 1)
+              const match = nextLineText?.match(/^\s+/)
+              const offset = match ? match[0].length : 0
+              const space = ' '.repeat(offset)
+              edit.insert(createPosition(selection.line, 0), space + insertText)
+              setTimeout(() => {
+                isPending = false
+                resolver()
+                clearInterval(timer)
+              }, 500)
+            })
+            nextTick(() => {
+              jumpToLine([selection.line, insertText.length])
+            })
+          }
+        }
+        isWorking = false
+      })
+    }),
+    registerCompletionItemProvider('*', () => {
+      const selection = getSelection()
+      if (!selection)
+        return
+      const lineText = getLineText(selection.line)
+      if (!lineText)
+        return
+      if (!lineText.startsWith('//') && !lineText.startsWith('/*'))
+        return
 
-  context.subscriptions.push(...disposes)
-}
-
-export function deactivate() {
-
-}
+      return options.map(content => createCompletionItem({
+        content,
+      }))
+    }, [' ']),
+  ]
+})

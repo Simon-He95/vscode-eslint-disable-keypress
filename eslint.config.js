@@ -1,4 +1,12 @@
 // @ts-check
-const simon_he = require('@simon_he/eslint-config').default
+const antfu = require('@antfu/eslint-config').default
 
-module.exports = simon_he()
+module.exports = antfu(
+  {
+    ignores: [
+      // eslint ignore globs here
+      'test/**/*',
+    ],
+  },
+
+)
