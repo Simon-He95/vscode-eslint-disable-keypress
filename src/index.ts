@@ -26,7 +26,6 @@ export = createExtension(() => {
     registerCommand('vscode-eslint-disable-keypress.on', async () => {
       if (isWorking)
         return
-
       const selection = getSelection()
       if (!selection)
         return
@@ -44,7 +43,7 @@ export = createExtension(() => {
         })
 
         if (result) {
-          const data = result.split('\n').map(i => i.trim().replace(/\s+/g, ' ')).slice(1)
+          const data = result.split('\n').map(i => i.trim().replace(/\s+/g, ' ')).filter(item => /^\d/.test(item))
           for (const error of data) {
             if (!error)
               break
@@ -68,8 +67,10 @@ export = createExtension(() => {
           const offset = getOffsetFromPosition(createPosition(selection.line, selection.character))!
           const newEndPosition = getPosition(offset + selection.selectedTextArray[0].length)
           const startPosition = createPosition(selection.line, 0)
-          if (!errors.length)
+          if (!errors.length) {
+            isWorking = false
             return message.warn('当前行没有eslint错误')
+          }
 
           isPending = true
           createProgress({
@@ -134,6 +135,7 @@ export = createExtension(() => {
             // 下一行eslint eslint-disable-next-line
             if (!errors.length) {
               message.warn('当前行没有eslint错误')
+              isWorking = false
               return
             }
             isPending = true
@@ -177,7 +179,7 @@ export = createExtension(() => {
 
             updateText((edit) => {
               // 获取下一行的前面空格作为当前的 offset
-              const nextLineText = getLineText(selection.line + 1)
+              const nextLineText = getLineText(selection.line + 1) || getLineText(selection.line)
               const match = nextLineText?.match(/^\s+/)
               const offset = match ? match[0].length : 0
               const space = ' '.repeat(offset)
