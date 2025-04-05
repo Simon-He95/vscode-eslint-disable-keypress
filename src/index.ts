@@ -1,11 +1,8 @@
-import { createCompletionItem, createExtension, createFakeProgress, createPosition, getCurrentFileUrl, getLineText, getOffsetFromPosition, getPosition, getRootPath, getSelection, jumpToLine, message, nextTick, registerCommand, registerCompletionItemProvider, saveFile, updateText } from '@vscode-use/utils'
-import { jsShell } from 'lazy-js-utils/dist/node'
+import { createExtension, createFakeProgress, createPosition, getCurrentFileUrl, getLineText, getOffsetFromPosition, getPosition, getRootPath, getSelection, insertText as insertSnippetText, message, nextTick, registerCommand, saveFile } from '@vscode-use/utils'
+import { jsShell } from 'lazy-js-utils/node'
 
 // eslint-disable-next-line no-restricted-syntax
 export = createExtension(() => {
-  let resolver: any
-  let timer: any
-
   const isBlock = (text: string) => {
     const textArr = text.split('\n')
     if (textArr.length >= 2)
@@ -86,27 +83,19 @@ export = createExtension(() => {
               else if (line > newEndPosition.line + 1)
                 break
             }
-            insertText = `/* eslint-disable ${temp.join(',')} */\n`
-
-            updateText((edit) => {
-              edit.insert(startPosition, insertText)
-              edit.insert(createPosition(newEndPosition.line + 1, 0), '/* eslint-enable */\n')
-              setTimeout(() => {
-                resolver()
-                clearInterval(timer)
-              }, 500)
-            })
-            nextTick(() => {
-              jumpToLine([selection.line, insertText.length - 4])
-            })
+            const nextLineText = getLineText(selection.line)
+            const match = nextLineText?.match(/^\s+/)
+            const _offset = match ? match[0].length : 0
+            const space = ' '.repeat(_offset)
+            insertText = `${space}/* eslint-disable \${1:${temp.join(',')}} */\n`
+            await insertSnippetText(createPosition(newEndPosition.line + 1, 0), `${space}/* eslint-enable */\n`)
+            await insertSnippetText(startPosition, insertText)
           }
           else {
             if (selection.line === 0 && !errors.length) {
               // /* eslint-disable */ 将整个文件禁用eslint
               insertText = '// eslint-disable\n'
-              updateText((edit) => {
-                edit.insert(createPosition(0, 0), insertText)
-              })
+              await insertSnippetText(createPosition(0, 0), insertText)
             }
             else {
               // 下一行eslint eslint-disable-next-line
@@ -126,21 +115,11 @@ export = createExtension(() => {
               }
               insertText = `// eslint-disable-next-line ${temp.join(',')}\n`
 
-              updateText((edit) => {
-                // 获取下一行的前面空格作为当前的 offset
-                const nextLineText = getLineText(selection.line + 1) || getLineText(selection.line)
-                const match = nextLineText?.match(/^\s+/)
-                const offset = match ? match[0].length : 0
-                const space = ' '.repeat(offset)
-                edit.insert(createPosition(selection.line, 0), space + insertText)
-                setTimeout(() => {
-                  resolver()
-                  clearInterval(timer)
-                }, 500)
-              })
-              nextTick(() => {
-                jumpToLine([selection.line, insertText.length])
-              })
+              const nextLineText = getLineText(selection.line)
+              const match = nextLineText?.match(/^\s+/)
+              const offset = match ? match[0].length : 0
+              const space = ' '.repeat(offset)
+              await insertSnippetText(createPosition(selection.line, 0), space + insertText)
             }
           }
           isWorking = false
@@ -150,6 +129,6 @@ export = createExtension(() => {
           isWorking = false
         }
       })
-    })
+    }),
   ]
 })

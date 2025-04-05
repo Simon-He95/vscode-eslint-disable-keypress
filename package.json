@@ -65,15 +65,15 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.27.3",
-    "@types/node": "^18.19.68",
-    "@types/vscode": "^1.96.0",
-    "@vscode-use/utils": "^0.1.39",
-    "bumpp": "^9.9.1",
-    "eslint": "^9.17.0",
-    "lazy-js-utils": "^0.1.27",
+    "@types/node": "^18.19.86",
+    "@types/vscode": "1.77.0",
+    "@vscode-use/utils": "^0.1.50",
+    "bumpp": "^9.11.1",
+    "eslint": "^9.24.0",
+    "lazy-js-utils": "^0.1.40",
     "pnpm": "^8.15.9",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
     "vsce": "^2.15.0"
   }
 }
