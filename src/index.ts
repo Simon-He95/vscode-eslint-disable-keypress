@@ -74,11 +74,11 @@ export = createExtension(() => {
             return message.warn('当前行没有eslint错误')
           }
 
-          const temp = []
+          const temp = new Set<string>()
           for (const item of errors) {
             const { line, rule } = item
             if (line >= startPosition.line + 1 && line <= newEndPosition.line + 1)
-              temp.push(rule)
+              temp.add(rule)
             else if (line > newEndPosition.line + 1)
               break
           }
@@ -86,7 +86,7 @@ export = createExtension(() => {
           const match = nextLineText?.match(/^\s+/)
           const _offset = match ? match[0].length : 0
           const space = ' '.repeat(_offset)
-          insertText = `${space}/* eslint-disable \${1:${temp.join(',')}} */\n`
+          insertText = `${space}/* eslint-disable \${1:${[...temp].join(',')}} */\n`
           await insertSnippetText(createPosition(newEndPosition.line + 1, 0), `${space}/* eslint-enable */\n`)
           await insertSnippetText(startPosition, insertText)
         }
