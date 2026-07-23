@@ -104,15 +104,15 @@ export = createExtension(() => {
               return
             }
 
-            const temp = []
+            const temp = new Set()
             for (const item of errors) {
               const { line, rule } = item
               if (line === selection.line + 1)
-                temp.push(rule)
+                temp.add(rule)
               else if (line > selection.line + 1)
                 break
             }
-            insertText = `// eslint-disable-next-line ${temp.join(',')}\n`
+            insertText = `// eslint-disable-next-line ${Array.from(temp).join(',')}\n`
 
             const nextLineText = getLineText(selection.line)
             const match = nextLineText?.match(/^\s+/)
